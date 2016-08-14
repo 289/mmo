@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--<properties resource="jdbc.properties"/>-->
+    <properties resource="dataSource.properties"/>
+    <typeAliases>
+        <typeAlias alias="RoleHikariCP" type="mmo.db.HikariCPFactory" />
+    </typeAliases>
+    <environments default="ACCOUNT">
+
+        <environment id="ROLE">
+            <transactionManager type="JDBC" />
+            <dataSource type="RoleHikariCP">
+                <property name="driverClassName" value="${driverClassName}"/>
+                <property name="jdbcUrl" value="${role.url}"/>
+                <property name="username" value="${role.username}"/>
+                <property name="password" value="${role.password}"/>
+                <property name="connectionTestQuery" value="${connectionTestQuery}"/>
+                <property name="connectionTimeout" value="${connectionTimeout}"/>
+                <property name="idleTimeout" value="${idleTimeout}"/>
+                <property name="maxLifetime" value="${maxLifetime}"/>
+                <property name="maximumPoolSize" value="${maximumPoolSize}"/>
+                <property name="minimumIdle" value="${minimumIdle}"/>
+            </dataSource>
+        </environment>
+
+    </environments>
+
+    <mappers>
+        <!--
+            使用package命令的前提是xml文件跟mapper接口文件在同一个包中，所以在generatorConfig.xml中
+            配置xml文件位置时必须要与mapper文件的包名相同。
+            使用package命令的好处是不用每加一个表都需要在这里添加新的记录
+             -->
+        <package name="mmo.db.role.mapper"/>
+    </mappers>
+</configuration>
