@@ -46,7 +46,7 @@ public abstract class DbEntity {
         }
     }
 
-    public void restMark(){
+    public void resetMark(){
         op.set(Mark.NONE);
     }
 

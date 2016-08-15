@@ -5,6 +5,7 @@ import mmo.ClazzMgr;
 import mmo.db.MapperMgr;
 import mmo.db.role.entity.Role;
 import mmo.db.role.mapper.RoleMapper;
+import mmo.db.trans.Transaction;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -40,13 +41,33 @@ public class Test {
         RoleMapper roleMapper = MapperMgr.getMapper(RoleMapper.class);
         Role role = roleMapper.selectByPrimaryKey(1);
 
-        Role role1 = new Role();
-        role1.setId(1);
+//        Role role1 = new Role();
+//        role1.setId(1);
 //        role1.setLevel(19);
-        role1.setNickname("haha");
-        roleMapper.updateByPrimaryKeySelective(role1);
-//
+//        role1.setNickname("haha");
+//        roleMapper.updateByPrimaryKeySelective(role1);
+        Transaction.begin();
+        try{
+            System.out.println(role.getNickname());
+            role.setNickname("lisi");
+            System.out.println(role.getNickname());
+//            throw new RuntimeException();
+        } catch (Exception e){
+            Transaction.current().rollBack();
+            Transaction.destroy();
+            System.out.println(role.getNickname());
+        } finally {
+            if(Transaction.current() != null){
+                Transaction.current().commit();
+                Transaction.destroy();
+            }
+        }
+        role.update();
 
+        System.out.println(roleMapper.selectByPrimaryKey(1).getNickname());
+
+        role.setNickname("david");
+        role.update();
         System.out.println(roleMapper.selectByPrimaryKey(1).getNickname());
     }
 }
