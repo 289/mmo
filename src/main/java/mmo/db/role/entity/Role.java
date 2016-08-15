@@ -115,7 +115,7 @@ public class Role extends DbEntity {
                 public void commit() {
                     Role role = getMirror();
                     role.setLevel(level);
-                    role.onUpdate();
+                    role.onUpdate(); // 状态放在下面更新，使上面的改变对其他线程可见
                 }
 
                 @Override
@@ -126,27 +126,34 @@ public class Role extends DbEntity {
         } else {
             Role role = getMirror();
             role.setLevel(level);
-            role.onUpdate();
+            role.onUpdate(); // 状态放在下面更新，使上面的改变对其他线程可见
         }
         this.level = level;
     }
 
     @Override
     public void update() {
-        Role mirror = getMirror();
-        if (mirror.getOp().equals(Mark.UPDATE)) {
+        Role mirror = null;
+        synchronized(mirrorLock){
+            if(mirrorEntity != null){
+                mirror = mirrorEntity.cast();
+                clearMirror();
+            }
+        }
+        if(mirror != null && mirror.mark.equals(Mark.UPDATE)){
             MapperMgr.getMapper(RoleMapper.class).updateByPrimaryKeySelective(mirror);
-            nickname = null;
-            level = null;
-            mirror.resetMark();
         }
     }
 
     @Override
     public void initMirror() {
         Role role = new Role();
-        role.isMirror = true;
+        role.initMirror0();
         role.id = this.id;
-        mirror = role;
+        synchronized (mirrorLock){
+            if(mirrorEntity == null){
+                mirrorEntity = role;
+            }
+        }
     }
 }
