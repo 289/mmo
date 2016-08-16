@@ -163,17 +163,21 @@ public class Role extends DbEntity {
 
     @Override
     public void update() {
-        if (mirrorLock.tryLock()) {
+        if (mirrorEntity != null && mirrorLock.tryLock()) {
+            Role mirror = null;
             try {
-                Role mirror;
-                if (mirrorEntity != null && (mirror = mirrorEntity.cast()).mark == UPDATE) {
-                    MapperMgr.getMapper(RoleMapper.class).updateByPrimaryKeySelective(mirror);
+                if (mirrorEntity != null ) {
+                    mirror = mirrorEntity.cast();
                     mirrorEntity = null;
                 }
             } finally {
                 mirrorLock.unlock();
             }
+            if(mirror != null && mirror.mark == UPDATE){
+                MapperMgr.getMapper(RoleMapper.class).updateByPrimaryKeySelective(mirror);
+            }
         }
+
     }
 
     @Override
