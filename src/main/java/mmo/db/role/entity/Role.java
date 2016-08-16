@@ -90,7 +90,7 @@ public class Role extends DbEntity {
                     mirrorLock.lock();
                     try {
                         Role role = getMirror();
-                        role.setNickname(nickname);
+                        role.nickname = nickname;
                         role.onUpdate();
                     } finally {
                         mirrorLock.unlock();
