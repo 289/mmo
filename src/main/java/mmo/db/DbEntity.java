@@ -1,30 +1,35 @@
 package mmo.db;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Created by jinshuai on 16/7/31.
  */
 public abstract class DbEntity {
-    public enum Mark {
-        NONE, INSERT, UPDATE, DELETE;
-    }
+
+    protected static final byte NONE   = 0;
+    protected static final byte INSERT = 1;
+    protected static final byte UPDATE = 2;
+    protected static final byte DELETE = 3;
 
     protected DbEntity mirrorEntity = null;
     protected boolean isMirror;
-    protected volatile Mark mark = null;
-    protected Object mirrorLock = new Object();
+    protected byte mark;
+    protected ReentrantLock mirrorLock = new ReentrantLock();
 
     protected abstract void initMirror();
     public abstract void update();
 
     protected void initMirror0(){
         isMirror = true;
-        mark = Mark.NONE;
+        mark = NONE;
     }
 
-    protected void clearMirror(){
-        mirrorEntity = null;
-    }
-
+    /**
+     * 外部用mirrorLock同步调用
+     * @param <E>
+     * @return
+     */
     protected <E extends DbEntity> E getMirror() {
         if (mirrorEntity == null) {
             initMirror();
@@ -33,19 +38,19 @@ public abstract class DbEntity {
     }
 
     protected void resetMark() {
-        mark = Mark.NONE;
+        mark = NONE;
     }
 
     protected void onUpdate() {
-        mark = Mark.UPDATE;
+        mark = UPDATE;
     }
 
     protected void onInsert() {
-        mark = Mark.INSERT;
+        mark = INSERT;
     }
 
     protected void onDelete() {
-        mark = Mark.DELETE;
+        mark = DELETE;
     }
 
     public <T extends DbEntity> T cast() {

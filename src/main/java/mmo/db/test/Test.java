@@ -5,7 +5,6 @@ import mmo.ClazzMgr;
 import mmo.db.MapperMgr;
 import mmo.db.role.entity.Role;
 import mmo.db.role.mapper.RoleMapper;
-import mmo.db.trans.Transaction;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -41,33 +40,55 @@ public class Test {
         RoleMapper roleMapper = MapperMgr.getMapper(RoleMapper.class);
         Role role = roleMapper.selectByPrimaryKey(1);
 
-//        Role role1 = new Role();
-//        role1.setId(1);
-//        role1.setLevel(19);
-//        role1.setNickname("haha");
-//        roleMapper.updateByPrimaryKeySelective(role1);
-        Transaction.begin();
-        try{
-            System.out.println(role.getNickname());
-            role.setNickname("lisi");
-            System.out.println(role.getNickname());
-//            throw new RuntimeException();
-        } catch (Exception e){
-            Transaction.current().rollBack();
-            Transaction.destroy();
-            System.out.println(role.getNickname());
-        } finally {
-            if(Transaction.current() != null){
-                Transaction.current().commit();
-                Transaction.destroy();
+//        Transaction.begin();
+//        try{
+//            role.setNickname("lisi");
+//        } catch (Exception e){
+//            Transaction.current().rollBack();
+//            Transaction.destroy();
+//        } finally {
+//            if(Transaction.current() != null){
+//                Transaction.current().commit();
+//                Transaction.destroy();
+//            }
+//        }
+        new Thread(){
+            @Override
+            public void run() {
+                System.out.println(1);
+                role.setNickname("zhangsan");
+                System.out.println(2);
             }
-        }
-        role.update();
+        }.start();
 
-        System.out.println(roleMapper.selectByPrimaryKey(1).getNickname());
+        new Thread(){
+            @Override
+            public void run() {
+                System.out.println(3);
+                role.setNickname("lisi");
+                System.out.println(4);
+            }
+        }.start();
 
-        role.setNickname("david");
-        role.update();
-        System.out.println(roleMapper.selectByPrimaryKey(1).getNickname());
+        new Thread(){
+            @Override
+            public void run() {
+                System.out.println(5);
+                role.update();
+                System.out.println(6);
+            }
+        }.start();
+
+        new Thread(){
+            @Override
+            public void run() {
+                System.out.println(7);
+                role.update();
+                System.out.println(8);
+            }
+        }.start();
+
+//        System.out.println(roleMapper.selectByPrimaryKey(1).getNickname());
+
     }
 }

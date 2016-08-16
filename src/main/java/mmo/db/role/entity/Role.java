@@ -41,9 +41,14 @@ public class Role extends DbEntity {
             transaction.addTRecord(new TransLog() {
                 @Override
                 public void commit() {
-                    Role role = getMirror();
-                    role.setId(id);
-                    role.onUpdate();
+                    mirrorLock.lock();
+                    try {
+                        Role role = getMirror();
+                        role.setId(id);
+                        role.onUpdate();
+                    } finally {
+                        mirrorLock.unlock();
+                    }
                 }
 
                 @Override
@@ -52,9 +57,14 @@ public class Role extends DbEntity {
                 }
             });
         } else {
-            Role role = getMirror();
-            role.setId(id);
-            role.onUpdate();
+            mirrorLock.lock();
+            try {
+                Role role = getMirror();
+                role.setId(id);
+                role.onUpdate();
+            } finally {
+                mirrorLock.unlock();
+            }
         }
         this.id = id;
     }
@@ -77,9 +87,14 @@ public class Role extends DbEntity {
             transaction.addTRecord(new TransLog() {
                 @Override
                 public void commit() {
-                    Role role = getMirror();
-                    role.setNickname(nickname);
-                    role.onUpdate();
+                    mirrorLock.lock();
+                    try {
+                        Role role = getMirror();
+                        role.setNickname(nickname);
+                        role.onUpdate();
+                    } finally {
+                        mirrorLock.unlock();
+                    }
                 }
 
                 @Override
@@ -88,9 +103,14 @@ public class Role extends DbEntity {
                 }
             });
         } else {
-            Role role = getMirror();
-            role.setNickname(nickname);
-            role.onUpdate();
+            mirrorLock.lock();
+            try {
+                Role role = getMirror();
+                role.setNickname(nickname);
+                role.onUpdate();
+            } finally {
+                mirrorLock.unlock();
+            }
         }
         this.nickname = nickname == null ? null : nickname.trim();
     }
@@ -113,9 +133,14 @@ public class Role extends DbEntity {
             transaction.addTRecord(new TransLog() {
                 @Override
                 public void commit() {
-                    Role role = getMirror();
-                    role.setLevel(level);
-                    role.onUpdate(); // 状态放在下面更新，使上面的改变对其他线程可见
+                    mirrorLock.lock();
+                    try {
+                        Role role = getMirror();
+                        role.setLevel(level);
+                        role.onUpdate();
+                    } finally {
+                        mirrorLock.unlock();
+                    }
                 }
 
                 @Override
@@ -124,24 +149,30 @@ public class Role extends DbEntity {
                 }
             });
         } else {
-            Role role = getMirror();
-            role.setLevel(level);
-            role.onUpdate(); // 状态放在下面更新，使上面的改变对其他线程可见
+            mirrorLock.lock();
+            try {
+                Role role = getMirror();
+                role.setLevel(level);
+                role.onUpdate();
+            } finally {
+                mirrorLock.unlock();
+            }
         }
         this.level = level;
     }
 
     @Override
     public void update() {
-        Role mirror = null;
-        synchronized(mirrorLock){
-            if(mirrorEntity != null){
-                mirror = mirrorEntity.cast();
-                clearMirror();
+        if (mirrorLock.tryLock()) {
+            try {
+                Role mirror;
+                if (mirrorEntity != null && (mirror = mirrorEntity.cast()).mark == UPDATE) {
+                    MapperMgr.getMapper(RoleMapper.class).updateByPrimaryKeySelective(mirror);
+                    mirrorEntity = null;
+                }
+            } finally {
+                mirrorLock.unlock();
             }
-        }
-        if(mirror != null && mirror.mark.equals(Mark.UPDATE)){
-            MapperMgr.getMapper(RoleMapper.class).updateByPrimaryKeySelective(mirror);
         }
     }
 
@@ -150,10 +181,6 @@ public class Role extends DbEntity {
         Role role = new Role();
         role.initMirror0();
         role.id = this.id;
-        synchronized (mirrorLock){
-            if(mirrorEntity == null){
-                mirrorEntity = role;
-            }
-        }
+        mirrorEntity = role;
     }
 }
