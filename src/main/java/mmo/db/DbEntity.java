@@ -1,5 +1,8 @@
 package mmo.db;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -12,10 +15,14 @@ public abstract class DbEntity {
     protected static final byte UPDATE = 2;
     protected static final byte DELETE = 3;
 
-    protected DbEntity mirrorEntity = null;
+    protected static final byte NONE_THREAD = 0;
+    protected static final byte WRITE_THREAD = 1;
+    protected static final byte UPDATE_THREAD = 2;
+
+    protected AtomicReference<Byte> state = new AtomicReference<>(NONE_THREAD);
+    protected volatile DbEntity mirrorEntity = null;
     protected boolean isMirror;
     protected byte mark;
-    protected ReentrantLock mirrorLock = new ReentrantLock();
 
     protected abstract void initMirror();
     public abstract void update();
@@ -26,7 +33,7 @@ public abstract class DbEntity {
     }
 
     /**
-     * 外部用mirrorLock同步调用
+     * 锟解部锟斤拷mirrorLock同锟斤拷锟斤拷锟斤拷
      * @param <E>
      * @return
      */

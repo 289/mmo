@@ -1,6 +1,5 @@
 package mmo.db;
 
-import mmo.db.role.mapper.IRoleMapper;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -31,7 +30,7 @@ public class MapperMgr {
 //        return (T) getMapper(mapper);
 //    }
 
-    public static <T extends IRoleMapper> T getRoleMapper(Class<T> mapper) {
+    public static <T extends MybatisMapper> T getRoleMapper(Class<T> mapper) {
         return (T) getMapper(mapper);
     }
 
