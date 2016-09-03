@@ -88,7 +88,7 @@ public class Role extends DbEntity {
     public void updateToMirror(int index, Object val){
         while (state.get() != WRITE_THREAD){
             //spin
-            state.compareAndSet(NONE_THREAD, UPDATE_THREAD);
+            state.compareAndSet(NONE_THREAD, WRITE_THREAD);
         }
         Role mirror = getMirror();
         commonSet(mirror, index, val);
