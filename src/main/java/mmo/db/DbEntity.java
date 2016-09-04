@@ -1,9 +1,6 @@
 package mmo.db;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by jinshuai on 16/7/31.
@@ -19,8 +16,8 @@ public abstract class DbEntity {
     protected static final byte WRITE_THREAD = 1;
     protected static final byte UPDATE_THREAD = 2;
 
-    protected AtomicReference<Byte> state = new AtomicReference<>(NONE_THREAD);
-    protected volatile DbEntity mirrorEntity = null;
+    protected AtomicReference<Byte> mirrorHolder = new AtomicReference<>(NONE_THREAD);
+    protected DbEntity mirrorEntity = null;
     protected boolean isMirror;
     protected byte mark;
 
@@ -42,6 +39,16 @@ public abstract class DbEntity {
             initMirror();
         }
         return mirrorEntity.cast();
+    }
+
+    protected  <E extends DbEntity> E getMirrorThenClear(){
+        if(mirrorEntity != null && mirrorHolder.compareAndSet(NONE_THREAD, UPDATE_THREAD)){
+            DbEntity ret = mirrorEntity;
+            mirrorEntity = null;
+            mirrorHolder.set(NONE_THREAD);
+            return ret.cast();
+        }
+        return null;
     }
 
     protected void resetMark() {
