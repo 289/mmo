@@ -29,11 +29,6 @@ public abstract class DbEntity {
         mark = NONE;
     }
 
-    /**
-     * �ⲿ��mirrorLockͬ������
-     * @param <E>
-     * @return
-     */
     protected <E extends DbEntity> E getMirror() {
         if (mirrorEntity == null) {
             initMirror();
@@ -42,13 +37,19 @@ public abstract class DbEntity {
     }
 
     protected  <E extends DbEntity> E getMirrorThenClear(){
-        if(mirrorEntity != null && mirrorHolder.compareAndSet(NONE_THREAD, UPDATE_THREAD)){
-            DbEntity ret = mirrorEntity;
-            mirrorEntity = null;
+        try {
+            while (!mirrorHolder.compareAndSet(NONE_THREAD, UPDATE_THREAD)){
+                //spin
+            }
+            if(mirrorEntity != null){
+                DbEntity ret = mirrorEntity;
+                mirrorEntity = null;
+                return ret.cast();
+            }
+            return null;
+        } finally {
             mirrorHolder.set(NONE_THREAD);
-            return ret.cast();
         }
-        return null;
     }
 
     protected void resetMark() {
