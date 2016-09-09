@@ -1,4 +1,4 @@
-package mmo.db.trans;
+package mmo.db;
 
 /**
  * Created by jinshuai on 16/7/31.

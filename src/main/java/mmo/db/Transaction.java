@@ -1,4 +1,4 @@
-package mmo.db.trans;
+package mmo.db;
 
 
 import java.util.Deque;
@@ -6,12 +6,20 @@ import java.util.LinkedList;
 
 public final class Transaction {
 
+    /**
+     * 结束事务，释放所有锁并且清除，清除wrapper。
+     */
+//    private void finish() {
+//        wrappers.clear();
+//    }
+
     private static ThreadLocal<Transaction> threadlocal = new ThreadLocal<>();
+//    final Map<LogKey, Object> wrappers = new HashMap<>();
 
     private Deque<TransLog> logQueue = new LinkedList<>();
 
-    public void addTRecord(TransLog record) {
-        logQueue.offer(record);
+    public boolean addLog(TransLog log) {
+        return logQueue.offer(log);
     }
 
     public static final void begin() {
@@ -23,6 +31,7 @@ public final class Transaction {
     }
 
     public static final void destroy() {
+//        current().wrappers.clear();
         threadlocal.set(null);
     }
 

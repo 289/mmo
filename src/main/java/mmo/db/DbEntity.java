@@ -1,5 +1,7 @@
 package mmo.db;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -12,61 +14,83 @@ public abstract class DbEntity {
     protected static final byte UPDATE = 2;
     protected static final byte DELETE = 3;
 
-    protected static final byte NONE_THREAD = 0;
-    protected static final byte WRITE_THREAD = 1;
-    protected static final byte UPDATE_THREAD = 2;
+    protected static final byte UN_LOCK = 0;
+    protected static final byte LOCK = 1;
 
-    protected AtomicReference<Byte> mirrorHolder = new AtomicReference<>(NONE_THREAD);
-    protected DbEntity mirrorEntity = null;
-    protected boolean isMirror;
-    protected byte mark;
+    protected Set<String> dirtyProps = new HashSet<>();
+    protected AtomicReference<Byte> isLock = new AtomicReference<>(UN_LOCK);
+//    protected DbEntity mirrorEntity = null;
+//    protected boolean isMirror;
+//    protected byte mark;
 
-    protected abstract void initMirror();
-    public abstract void update();
+//    protected abstract void initMirror();
+    public abstract void save();
 
-    protected void initMirror0(){
-        isMirror = true;
-        mark = NONE;
-    }
-
-    protected <E extends DbEntity> E getMirror() {
-        if (mirrorEntity == null) {
-            initMirror();
-        }
-        return mirrorEntity.cast();
-    }
-
-    protected  <E extends DbEntity> E getMirrorThenClear(){
+    public void markPropDirty(String prop){
         try {
-            while (!mirrorHolder.compareAndSet(NONE_THREAD, UPDATE_THREAD)){
+            while (!isLock.compareAndSet(UN_LOCK, LOCK)) {
                 //spin
             }
-            if(mirrorEntity != null){
-                DbEntity ret = mirrorEntity;
-                mirrorEntity = null;
-                return ret.cast();
-            }
-            return null;
+            dirtyProps.add(prop);
         } finally {
-            mirrorHolder.set(NONE_THREAD);
+            isLock.set(UN_LOCK);
         }
     }
 
-    protected void resetMark() {
-        mark = NONE;
+    public void removePropDirty(String prop){
+        try {
+            while (!isLock.compareAndSet(UN_LOCK, LOCK)) {
+                //spin
+            }
+            dirtyProps.remove(prop);
+        } finally {
+            isLock.set(UN_LOCK);
+        }
     }
 
-    protected void onUpdate() {
-        mark = UPDATE;
-    }
+//    protected void initMirror0(){
+//        isMirror = true;
+//        mark = NONE;
+//    }
 
-    protected void onInsert() {
-        mark = INSERT;
-    }
+//    protected <E extends DbEntity> E getMirror() {
+//        if (mirrorEntity == null) {
+//            initMirror();
+//        }
+//        return mirrorEntity.cast();
+//    }
 
-    protected void onDelete() {
-        mark = DELETE;
-    }
+//    protected  <E extends DbEntity> E getMirrorThenClear(){
+//        try {
+//            while (!isLock.compareAndSet(NONE_THREAD, UPDATE_THREAD)){
+//                //spin
+//            }
+//            if(mirrorEntity != null){
+//                DbEntity ret = mirrorEntity;
+//                mirrorEntity = null;
+//                return ret.cast();
+//            }
+//            return null;
+//        } finally {
+//            isLock.set(NONE_THREAD);
+//        }
+//    }
+
+//    protected void resetMark() {
+//        mark = NONE;
+//    }
+
+//    protected void onUpdate() {
+//        mark = UPDATE;
+//    }
+
+//    protected void onInsert() {
+//        mark = INSERT;
+//    }
+//
+//    protected void onDelete() {
+//        mark = DELETE;
+//    }
 
     public <T extends DbEntity> T cast() {
         return (T) this;
