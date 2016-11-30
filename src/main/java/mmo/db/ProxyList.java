@@ -76,7 +76,6 @@ public class ProxyList<E> implements List<E> {
         Transaction transaction = Transaction.current();
         boolean addLogSucc = false;
         if(transaction != null){
-            int oldSize = wrapped.size();
             int addSize = c.size();
             addLogSucc = transaction.addLog(new TransLog() {
                 @Override
@@ -86,8 +85,8 @@ public class ProxyList<E> implements List<E> {
 
                 @Override
                 public void rollback() {
-                    for (int i = oldSize; i < oldSize + addSize ; i++) {
-                        wrapped.remove(i);
+                    for (int i = 0; i < addSize; i++) {
+                        wrapped.remove(wrapped.size() - 1);
                     }
                 }
             });
@@ -246,7 +245,7 @@ public class ProxyList<E> implements List<E> {
 
                 @Override
                 public void rollback() {
-                    wrapped.add(index, removed);
+                    wrapped.set(index, removed);
                 }
             });
         }
