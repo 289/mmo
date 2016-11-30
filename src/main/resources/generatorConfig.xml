@@ -22,11 +22,11 @@
         </jdbcConnection>
 
         <javaModelGenerator targetPackage="mmo.db.role.entity" targetProject="./src/main/java">
-            <property name="enableSubPackages" value="true"/>
-            <property name="trimStrings" value="true"/>
+            <!--<property name="enableSubPackages" value="true"/>-->
+            <!--<property name="trimStrings" value="true"/>-->
 
-            <property name="constructorBased" value="true"/>
-            <property name="rootClass" value="mmo.db.DbEntity"/>
+            <!--<property name="constructorBased" value="true"/>-->
+            <!--<property name="rootClass" value="mmo.db.DbEntity"/>-->
         </javaModelGenerator>
 
         <sqlMapGenerator targetPackage="mmo.db.role.mapper" targetProject="./src/main/resources">
@@ -39,7 +39,31 @@
             <property name="rootInterface" value="mmo.db.role.mapper.IRoleMapper"/>
         </javaClientGenerator>
 
-        <table schema="role" tableName="role"/>
+        <!--<table schema="role" tableName="role"/>-->
+
+        <table schema="role" tableName="role" >
+            <columnOverride column="nickname" javaType="Test" typeHandler="com.Test"/>
+            <!-- 使用property属性来指定列要生成的属性名称 -->
+            <!--<property name="property" value="userName"/>-->
+
+            <!-- javaType用于指定生成的domain的属性类型，使用类型的全限定名
+            <property name="javaType" value=""/>
+             -->
+
+            <!-- jdbcType用于指定该列的JDBC类型
+            <property name="jdbcType" value=""/>
+             -->
+
+            <!-- typeHandler 用于指定该列使用到的TypeHandler，如果要指定，配置类型处理器的全限定名
+                注意，mybatis中，不会生成到mybatis-config.xml中的typeHandler
+                只会生成类似：where id = #{id,jdbcType=BIGINT,typeHandler=com._520it.mybatis.MyTypeHandler}的参数描述
+            <property name="jdbcType" value=""/>
+            -->
+
+            <!-- 参考table元素的delimitAllColumns配置，默认为false
+            <property name="delimitedColumnName" value=""/>
+             -->
+        </table>
 
     </context>
 
